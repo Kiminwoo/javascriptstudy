@@ -1,2 +1,2 @@
 # javascriptstudy
-javascriptstudy
+Study
