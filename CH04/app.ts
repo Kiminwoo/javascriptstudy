@@ -1,10 +1,26 @@
-const container = document.getElementById('root');
-const content = document.createElement('div');
+type Store = {
+  currentPage: number;
+  feeds : NewsFeed[];
+}
 
-const ajax = new XMLHttpRequest();
+type NewsFeed = {
+  id: number;
+  comments_count: number;
+  url: string;
+  user: string;
+  time_ago: string;
+  points: number;
+  title: string;
+  read?: boolean; // 있을 때도 있고 없을 때도 있고 
+
+}
+
+const container: HTMLElement | null = document.getElementById('root');
+const content = document.createElement('div');
+const ajax: XMLHttpRequest = new XMLHttpRequest();
 const NEWS_URL = 'https://api.hnpwa.com/v0/news/1.json'; // 뉴스 피드 
 const CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json'; // 뉴스 내용 
-const store = {
+const store: Store = {
   currentPage :1,
   feeds: [],
 };
@@ -23,8 +39,16 @@ function makeFeeds(feeds){ // 피드 클릭 여부 함수
   return feeds;
 }
 
+function updateView(html){ // 타입 가드 코드 
+  if(container){
+    container.innerHTML = html ; 
+  } else {
+    console.log("최상위 컨테이너가 없어 UI를 진행하지 못합니다.")
+  }
+}
+
 function newsFeed(){ // 뉴스 피드 함수 
-  let newsFeed = store.feeds; 
+  let newsFeed: NewsFeed[] = store.feeds; 
   const newsList = [];
   let template = `
   <div class="bg-gray-600 min-h-screen">
@@ -82,7 +106,8 @@ function newsFeed(){ // 뉴스 피드 함수
   template = template.replace('{{__news_feed__}}', newsList.join(''));
   template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
   template = template.replace('{{__next_page__}}', store.currentPage < 3 ? store.currentPage + 1 : 3);
-  container.innerHTML = template ; 
+  
+  updateView(template);
 }
 
 function newsDetail() { // 뉴스 내용 함수 
@@ -146,7 +171,7 @@ function newsDetail() { // 뉴스 내용 함수
     return commentString.join('');
   }
 
-  container.innerHTML = template.replace('{{__comments__}}', makeComment(newsContent.comments));
+  updateView(template.replace('{{__comments__}}', makeComment(newsContent.comments)));
 }
 
 function router(){ // 라우터 함수 
