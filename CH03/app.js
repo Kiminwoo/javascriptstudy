@@ -2,20 +2,20 @@ const container = document.getElementById('root');
 const content = document.createElement('div');
 
 const ajax = new XMLHttpRequest();
-const NEWS_URL = 'https://api.hnpwa.com/v0/news/1.json';
-const CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json';
+const NEWS_URL = 'https://api.hnpwa.com/v0/news/1.json'; // 뉴스 피드 
+const CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json'; // 뉴스 내용 
 const store = {
   currentPage :1,
   feeds: [],
 };
 
-function getData(url){
+function getData(url){ // ajax 통신 함수 
   ajax.open('GET', url, false);
   ajax.send();
   return JSON.parse(ajax.response);
 }
 
-function makeFeeds(feeds){
+function makeFeeds(feeds){ // 피드 클릭 여부 함수 
   for(let i=0; i < feeds.length; i++){
     feeds[i].read = false;
   }
@@ -23,7 +23,7 @@ function makeFeeds(feeds){
   return feeds;
 }
 
-function newsFeed(){
+function newsFeed(){ // 뉴스 피드 함수 
   let newsFeed = store.feeds; 
   const newsList = [];
   let template = `
@@ -50,13 +50,13 @@ function newsFeed(){
     </div>
   </div>
 `;
-  if (newsFeed.length === 0) {
+  if (newsFeed.length === 0) { // 첫 로딩시에만 ajax 통신 
     newsFeed = store.feeds = makeFeeds(getData(NEWS_URL));
   }  
 
 
-  for(let i = ( store.currentPage -1 ) * 10 ; i < store.currentPage * 10; i++) {
-    newsList.push(
+  for(let i = ( store.currentPage -1 ) * 10 ; i < store.currentPage * 10; i++) { // 뉴스 피드 페이징 처리 
+  newsList.push(
       `
       <div class="p-6 ${newsFeed[i].read ? 'bg-red-500' : 'bg-white'} mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100">
         <div class="flex">
@@ -85,7 +85,7 @@ function newsFeed(){
   container.innerHTML = template ; 
 }
 
-function newsDetail() {
+function newsDetail() { // 뉴스 내용 함수 
   const id = location.hash.substr(7);
   const newsContent = getData(CONTENT_URL.replace('@id', id))
   let template = `
@@ -117,14 +117,14 @@ function newsDetail() {
     </div>
   `;
 
-  for(let i=0; i < store.feeds.length; i++) {
+  for(let i=0; i < store.feeds.length; i++) { // 피드 클릭 여부 함수  
     if (store.feeds[i].id === Number(id)) {
       store.feeds[i].read = true;
       break;
     }
   }
 
-  function makeComment(comments, called = 0) {
+  function makeComment(comments, called = 0) { // 피드의 댓글 함수 
     const commentString = [];
 
     for(let i = 0; i < comments.length; i++) {
@@ -149,9 +149,8 @@ function newsDetail() {
   container.innerHTML = template.replace('{{__comments__}}', makeComment(newsContent.comments));
 }
 
-function router(){
-  const routePath = location.hash;
-
+function router(){ // 라우터 함수 
+  const routePath = location.hash; // 주소값으로 라우터 처리  
   if(routePath === ''){ // location.hash 에 #만 있을 경우 빈문자열로 
     newsFeed();
   } else if (routePath.indexOf('#/page/')>=0){
