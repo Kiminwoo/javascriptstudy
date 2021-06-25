@@ -117,108 +117,226 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"app.js":[function(require,module,exports) {
-var container = document.getElementById('root');
-var content = document.createElement('div');
-var ajax = new XMLHttpRequest();
-var NEWS_URL = 'https://api.hnpwa.com/v0/news/1.json'; // 뉴스 피드 
+})({"../../../AppData/Roaming/npm/node_modules/parcel-bundler/node_modules/process/browser.js":[function(require,module,exports) {
 
-var CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json'; // 뉴스 내용 
+// shim for using process in browser
+var process = module.exports = {}; // cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
 
-var store = {
-  currentPage: 1,
-  feeds: []
-};
+var cachedSetTimeout;
+var cachedClearTimeout;
 
-function getData(url) {
-  // ajax 통신 함수 
-  ajax.open('GET', url, false);
-  ajax.send();
-  return JSON.parse(ajax.response);
+function defaultSetTimout() {
+  throw new Error('setTimeout has not been defined');
 }
 
-function makeFeeds(feeds) {
-  // 피드 클릭 여부 함수 
-  for (var i = 0; i < feeds.length; i++) {
-    feeds[i].read = false;
-  }
-
-  return feeds;
+function defaultClearTimeout() {
+  throw new Error('clearTimeout has not been defined');
 }
 
-function newsFeed() {
-  // 뉴스 피드 함수 
-  var newsFeed = store.feeds;
-  var newsList = [];
-  var template = "\n  <div class=\"bg-gray-600 min-h-screen\">\n    <div class=\"bg-white text-xl\">\n      <div class=\"mx-auto px-4\">\n        <div class=\"flex justify-between items-center py-6\">\n          <div class=\"flex justify-start\">\n            <h1 class=\"font-extrabold\">Hacker News</h1>\n          </div>\n          <div class=\"items-center justify-end\">\n            <a href=\"#/page/{{__prev_page__}}\" class=\"text-gray-500\">\n              Previous\n            </a>\n            <a href=\"#/page/{{__next_page__}}\" class=\"text-gray-500 ml-4\">\n              Next\n            </a>\n          </div>\n        </div> \n      </div>\n    </div>\n    <div class=\"p-4 text-2xl text-gray-700\">\n      {{__news_feed__}}        \n    </div>\n  </div>\n";
-
-  if (newsFeed.length === 0) {
-    // 첫 로딩시에만 ajax 통신 
-    newsFeed = store.feeds = makeFeeds(getData(NEWS_URL));
+(function () {
+  try {
+    if (typeof setTimeout === 'function') {
+      cachedSetTimeout = setTimeout;
+    } else {
+      cachedSetTimeout = defaultSetTimout;
+    }
+  } catch (e) {
+    cachedSetTimeout = defaultSetTimout;
   }
 
-  for (var i = (store.currentPage - 1) * 10; i < store.currentPage * 10; i++) {
-    // 뉴스 피드 페이징 처리 
-    newsList.push("\n      <div class=\"p-6 ".concat(newsFeed[i].read ? 'bg-red-500' : 'bg-white', " mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100\">\n        <div class=\"flex\">\n          <div class=\"flex-auto\">\n            <a href=\"#/show/").concat(newsFeed[i].id, "\">").concat(newsFeed[i].title, "</a>  \n          </div>\n          <div class=\"text-center text-sm\">\n            <div class=\"w-10 text-white bg-green-300 rounded-lg px-0 py-2\">").concat(newsFeed[i].comments_count, "</div>\n          </div>\n        </div>\n        <div class=\"flex mt-3\">\n          <div class=\"grid grid-cols-3 text-sm text-gray-500\">\n            <div><i class=\"fas fa-user mr-1\"></i>").concat(newsFeed[i].user, "</div>\n            <div><i class=\"fas fa-heart mr-1\"></i>").concat(newsFeed[i].points, "</div>\n            <div><i class=\"far fa-clock mr-1\"></i>").concat(newsFeed[i].time_ago, "</div>\n          </div>  \n        </div>\n      </div>    \n    "));
+  try {
+    if (typeof clearTimeout === 'function') {
+      cachedClearTimeout = clearTimeout;
+    } else {
+      cachedClearTimeout = defaultClearTimeout;
+    }
+  } catch (e) {
+    cachedClearTimeout = defaultClearTimeout;
+  }
+})();
+
+function runTimeout(fun) {
+  if (cachedSetTimeout === setTimeout) {
+    //normal enviroments in sane situations
+    return setTimeout(fun, 0);
+  } // if setTimeout wasn't available but was latter defined
+
+
+  if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+    cachedSetTimeout = setTimeout;
+    return setTimeout(fun, 0);
   }
 
-  template = template.replace('{{__news_feed__}}', newsList.join(''));
-  template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
-  template = template.replace('{{__next_page__}}', store.currentPage < 3 ? store.currentPage + 1 : 3);
-  container.innerHTML = template;
-}
-
-function newsDetail() {
-  // 뉴스 내용 함수 
-  var id = location.hash.substr(7);
-  var newsContent = getData(CONTENT_URL.replace('@id', id));
-  var template = "\n    <div class=\"bg-gray-600 min-h-screen pb-8\">\n      <div class=\"bg-white text-xl\">\n        <div class=\"mx-auto px-4\">\n          <div class=\"flex justify-between items-center py-6\">\n            <div class=\"flex justify-start\">\n              <h1 class=\"font-extrabold\">Hacker News</h1>\n            </div>\n            <div class=\"items-center justify-end\">\n              <a href=\"#/page/".concat(store.currentPage, "\" class=\"text-gray-500\">\n                <i class=\"fa fa-times\"></i>\n              </a>\n            </div>\n          </div>\n        </div>\n      </div>\n\n      <div class=\"h-full border rounded-xl bg-white m-6 p-4 \">\n        <h2>").concat(newsContent.title, "</h2>\n        <div class=\"text-gray-400 h-20\">\n          ").concat(newsContent.content, "\n        </div>\n\n        {{__comments__}}\n\n      </div>\n    </div>\n  ");
-
-  for (var i = 0; i < store.feeds.length; i++) {
-    // 피드 클릭 여부 함수  
-    if (store.feeds[i].id === Number(id)) {
-      store.feeds[i].read = true;
-      break;
+  try {
+    // when when somebody has screwed with setTimeout but no I.E. maddness
+    return cachedSetTimeout(fun, 0);
+  } catch (e) {
+    try {
+      // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+      return cachedSetTimeout.call(null, fun, 0);
+    } catch (e) {
+      // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+      return cachedSetTimeout.call(this, fun, 0);
     }
   }
+}
 
-  function makeComment(comments) {
-    var called = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-    // 피드의 댓글 함수 
-    var commentString = [];
+function runClearTimeout(marker) {
+  if (cachedClearTimeout === clearTimeout) {
+    //normal enviroments in sane situations
+    return clearTimeout(marker);
+  } // if clearTimeout wasn't available but was latter defined
 
-    for (var _i = 0; _i < comments.length; _i++) {
-      commentString.push("\n        <div style=\"padding-left: ".concat(called * 40, "px;\" class=\"mt-4\">\n          <div class=\"text-gray-400\">\n            <i class=\"fa fa-sort-up mr-2\"></i>\n            <strong>").concat(comments[_i].user, "</strong> ").concat(comments[_i].time_ago, "\n          </div>\n          <p class=\"text-gray-700\">").concat(comments[_i].content, "</p>\n        </div>      \n      "));
 
-      if (comments[_i].comments.length > 0) {
-        commentString.push(makeComment(comments[_i].comments, called + 1));
+  if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+    cachedClearTimeout = clearTimeout;
+    return clearTimeout(marker);
+  }
+
+  try {
+    // when when somebody has screwed with setTimeout but no I.E. maddness
+    return cachedClearTimeout(marker);
+  } catch (e) {
+    try {
+      // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+      return cachedClearTimeout.call(null, marker);
+    } catch (e) {
+      // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+      // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+      return cachedClearTimeout.call(this, marker);
+    }
+  }
+}
+
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+  if (!draining || !currentQueue) {
+    return;
+  }
+
+  draining = false;
+
+  if (currentQueue.length) {
+    queue = currentQueue.concat(queue);
+  } else {
+    queueIndex = -1;
+  }
+
+  if (queue.length) {
+    drainQueue();
+  }
+}
+
+function drainQueue() {
+  if (draining) {
+    return;
+  }
+
+  var timeout = runTimeout(cleanUpNextTick);
+  draining = true;
+  var len = queue.length;
+
+  while (len) {
+    currentQueue = queue;
+    queue = [];
+
+    while (++queueIndex < len) {
+      if (currentQueue) {
+        currentQueue[queueIndex].run();
       }
     }
 
-    return commentString.join('');
+    queueIndex = -1;
+    len = queue.length;
   }
 
-  container.innerHTML = template.replace('{{__comments__}}', makeComment(newsContent.comments));
+  currentQueue = null;
+  draining = false;
+  runClearTimeout(timeout);
 }
 
-function router() {
-  // 라우터 함수 
-  var routePath = location.hash; // 주소값으로 라우터 처리  
+process.nextTick = function (fun) {
+  var args = new Array(arguments.length - 1);
 
-  if (routePath === '') {
-    // location.hash 에 #만 있을 경우 빈문자열로 
-    newsFeed();
-  } else if (routePath.indexOf('#/page/') >= 0) {
-    store.currentPage = Number(routePath.substr(7));
-    newsFeed();
-  } else {
-    newsDetail();
+  if (arguments.length > 1) {
+    for (var i = 1; i < arguments.length; i++) {
+      args[i - 1] = arguments[i];
+    }
   }
+
+  queue.push(new Item(fun, args));
+
+  if (queue.length === 1 && !draining) {
+    runTimeout(drainQueue);
+  }
+}; // v8 likes predictible objects
+
+
+function Item(fun, array) {
+  this.fun = fun;
+  this.array = array;
 }
 
-window.addEventListener('hashchange', router);
-router();
-},{}],"../../../AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+Item.prototype.run = function () {
+  this.fun.apply(null, this.array);
+};
+
+process.title = 'browser';
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) {
+  return [];
+};
+
+process.binding = function (name) {
+  throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () {
+  return '/';
+};
+
+process.chdir = function (dir) {
+  throw new Error('process.chdir is not supported');
+};
+
+process.umask = function () {
+  return 0;
+};
+},{}],"test.js":[function(require,module,exports) {
+var process = require("process");
+process.stdin.setEncoding('utf8');
+process.stdin.on('data', function (data) {
+  var n = data.split(" ");
+  var a = Number(n[0]),
+      b = Number(n[1]);
+  console.log(a);
+  console.log(b);
+});
+},{"process":"../../../AppData/Roaming/npm/node_modules/parcel-bundler/node_modules/process/browser.js"}],"../../../AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -246,7 +364,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54664" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57917" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -422,5 +540,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["../../../AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","app.js"], null)
-//# sourceMappingURL=/app.c328ef1a.js.map
+},{}]},{},["../../../AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","test.js"], null)
+//# sourceMappingURL=/test.js.map

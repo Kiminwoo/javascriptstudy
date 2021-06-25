@@ -3,16 +3,28 @@ type Store = {
   feeds : NewsFeed[];
 }
 
-type NewsFeed = {
+type News = { // 중복으로 사용되는 변수들 
   id: number;
-  comments_count: number;
+  time_ago: string;
+  title: string;
   url: string;
   user: string;
-  time_ago: string;
-  points: number;
-  title: string;
-  read?: boolean; // 있을 때도 있고 없을 때도 있고 
+  content: string;
+}
 
+type NewsFeed = News & { // 인터셉트 (타입엘리어스)
+  comments_count: number;
+  points: number;
+  read?: boolean; // 있을 때도 있고 없을 때도 있고 
+}
+
+type NewsDetail = News & {
+  comments: NewsComment[];
+}
+
+type NewsComment = News & {  
+  comments: NewsComment[];
+  level: number;
 }
 
 const container: HTMLElement | null = document.getElementById('root');
@@ -25,13 +37,13 @@ const store: Store = {
   feeds: [],
 };
 
-function getData(url){ // ajax 통신 함수 
+function getData<AjaxResponse>(url: string): AjaxResponse { // ajax 통신 함수  , Generic
   ajax.open('GET', url, false);
   ajax.send();
-  return JSON.parse(ajax.response);
+  return JSON.parse(ajax.response); // 호출하는 쪽에서 유형을 명시해 주면 반환유형으로 
 }
 
-function makeFeeds(feeds){ // 피드 클릭 여부 함수 
+function makeFeeds(feeds: NewsFeed[]): NewsFeed[]{ // 피드 클릭 여부 함수
   for(let i=0; i < feeds.length; i++){
     feeds[i].read = false;
   }
@@ -39,7 +51,7 @@ function makeFeeds(feeds){ // 피드 클릭 여부 함수
   return feeds;
 }
 
-function updateView(html){ // 타입 가드 코드 
+function updateView(html:string): void{ // 타입 가드 코드 
   if(container){
     container.innerHTML = html ; 
   } else {
@@ -47,7 +59,7 @@ function updateView(html){ // 타입 가드 코드
   }
 }
 
-function newsFeed(){ // 뉴스 피드 함수 
+function newsFeed(): void{ // 뉴스 피드 함수 
   let newsFeed: NewsFeed[] = store.feeds; 
   const newsList = [];
   let template = `
@@ -75,7 +87,7 @@ function newsFeed(){ // 뉴스 피드 함수
   </div>
 `;
   if (newsFeed.length === 0) { // 첫 로딩시에만 ajax 통신 
-    newsFeed = store.feeds = makeFeeds(getData(NEWS_URL));
+    newsFeed = store.feeds = makeFeeds(getData<NewsFeed[]>(NEWS_URL));
   }  
 
 
@@ -104,15 +116,15 @@ function newsFeed(){ // 뉴스 피드 함수
   }
 
   template = template.replace('{{__news_feed__}}', newsList.join(''));
-  template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
-  template = template.replace('{{__next_page__}}', store.currentPage < 3 ? store.currentPage + 1 : 3);
+  template = template.replace('{{__prev_page__}}', String(store.currentPage > 1 ? store.currentPage - 1 : 1));
+  template = template.replace('{{__next_page__}}', String(store.currentPage < 3 ? store.currentPage + 1 : 3));
   
   updateView(template);
 }
 
 function newsDetail() { // 뉴스 내용 함수 
   const id = location.hash.substr(7);
-  const newsContent = getData(CONTENT_URL.replace('@id', id))
+  const newsContent = getData<NewsDetail>(CONTENT_URL.replace('@id', id))
   let template = `
     <div class="bg-gray-600 min-h-screen pb-8">
       <div class="bg-white text-xl">
@@ -149,22 +161,23 @@ function newsDetail() { // 뉴스 내용 함수
     }
   }
 
-  function makeComment(comments, called = 0) { // 피드의 댓글 함수 
+  function makeComment(comments: NewsComment[]):string { // 피드의 댓글 함수 
     const commentString = [];
 
-    for(let i = 0; i < comments.length; i++) {
+    for (let i = 0; i < comments.length; i++) {
+      const comment: NewsComment = comments[i];
       commentString.push(`
-        <div style="padding-left: ${called * 40}px;" class="mt-4">
+        <div style="padding-left: ${comment.level}px;" class="mt-4">
           <div class="text-gray-400">
             <i class="fa fa-sort-up mr-2"></i>
-            <strong>${comments[i].user}</strong> ${comments[i].time_ago}
+            <strong>${comment.user}</strong> ${comment.time_ago}
           </div>
-          <p class="text-gray-700">${comments[i].content}</p>
+          <p class="text-gray-700">${comment.content}</p>
         </div>      
       `);
 
-      if (comments[i].comments.length > 0) {
-        commentString.push(makeComment(comments[i].comments, called + 1));
+      if (comment.comments.length > 0) {
+        commentString.push(makeComment(comment.comments));
       }
     }
 
