@@ -37,10 +37,34 @@ const store: Store = {
   feeds: [],
 };
 
-function getData<AjaxResponse>(url: string): AjaxResponse { // ajax 통신 함수  , Generic
-  ajax.open('GET', url, false);
-  ajax.send();
-  return JSON.parse(ajax.response); // 호출하는 쪽에서 유형을 명시해 주면 반환유형으로 
+class Api {
+  url: string;
+  ajax: XMLHttpRequest;
+
+
+  constructor(url:string) {
+    this.url = url;
+    this.ajax = new XMLHttpRequest();
+  }
+
+  getRequest<AjaxResponse>(): AjaxResponse {
+    this.ajax.open('GET', this.url, false);
+    this.ajax.send();
+
+    return JSON.parse(ajax.response);
+  }
+}
+
+class NewsFeedApi extends Api {
+  getData(): NewsFeed[] {
+    return this.getRequest<NewsFeed[]>();
+  }
+}
+
+class NewsDetailApi extends Api {
+  getData(): NewsDetail {
+    return this.getRequest<NewsDetail>();
+  }
 }
 
 function makeFeeds(feeds: NewsFeed[]): NewsFeed[]{ // 피드 클릭 여부 함수
