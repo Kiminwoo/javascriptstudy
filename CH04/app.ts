@@ -41,29 +41,25 @@ class Api {
   url: string;
   ajax: XMLHttpRequest;
 
-
-  constructor(url:string) {
-    this.url = url;
-    this.ajax = new XMLHttpRequest();
-  }
-
-  getRequest<AjaxResponse>(): AjaxResponse {
-    this.ajax.open('GET', this.url, false);
-    this.ajax.send();
+  
+  getRequest<AjaxResponse>(url: string): AjaxResponse {
+    const ajax = new XMLHttpRequest();
+    ajax.open('GET', url, false);
+    ajax.send();
 
     return JSON.parse(ajax.response);
   }
 }
 
-class NewsFeedApi extends Api {
+class NewsFeedApi {
   getData(): NewsFeed[] {
     return this.getRequest<NewsFeed[]>();
   }
 }
 
-class NewsDetailApi extends Api {
-  getData(): NewsDetail {
-    return this.getRequest<NewsDetail>();
+class NewsDetailApi {
+  getData(id:string): NewsDetail {
+    return this.getRequest<NewsDetail>(CONTENT_URL.replace('@id',id));
   }
 }
 
@@ -84,7 +80,8 @@ function updateView(html:string): void{ // 타입 가드 코드
 }
 
 function newsFeed(): void{ // 뉴스 피드 함수 
-  let newsFeed: NewsFeed[] = store.feeds; 
+  const api = new NewsFeedApi(NEWS_URL);
+  let newsFeed: NewsFeed[] = store.feeds;
   const newsList = [];
   let template = `
   <div class="bg-gray-600 min-h-screen">
@@ -111,7 +108,7 @@ function newsFeed(): void{ // 뉴스 피드 함수
   </div>
 `;
   if (newsFeed.length === 0) { // 첫 로딩시에만 ajax 통신 
-    newsFeed = store.feeds = makeFeeds(getData<NewsFeed[]>(NEWS_URL));
+    newsFeed = store.feeds = makeFeeds(api.getData());
   }  
 
 
@@ -148,7 +145,8 @@ function newsFeed(): void{ // 뉴스 피드 함수
 
 function newsDetail() { // 뉴스 내용 함수 
   const id = location.hash.substr(7);
-  const newsContent = getData<NewsDetail>(CONTENT_URL.replace('@id', id))
+  const api = new NewsDetailApi(CONTENT_URL.replace('@id', id))
+  const newsContent = api.getData();
   let template = `
     <div class="bg-gray-600 min-h-screen pb-8">
       <div class="bg-white text-xl">
