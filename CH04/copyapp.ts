@@ -3,28 +3,28 @@ type Store2 = {
     feeds: NewsFeed2[];
 }
 
-type News2 = {
-    id: number;
-    time_ago: string;
-    title: string;
-    url: string;
-    user: string;
-    content: string;
+interface News2  { 
+    readonly id: number;
+    readonly time_ago: string;
+    readonly title: string;
+    readonly url: string;
+    readonly user: string;
+    readonly content: string;
 }
 
-type NewsFeed2 = News2 & {
-    comments_count: number;
-    points: number;
-    read?: boolean;
+interface NewsFeed2 extends News2 {
+    readonly comments_count: number;
+    readonly points: number;
+    readonly read?: boolean;
 }
 
-type NewsDetail2 = News2 & {
-    comments: NewsComment2[];
+interface NewsDetail2 extends News2 {
+    readonly comments: NewsComment2[];
 }
 
-type NewsComment2 = News2 & {
-    comments: NewsComment2[];
-    level: number;
+interface NewsComment2 extends News2 {
+    readonly comments: NewsComment2[];
+    readonly level: number;
 }
 
 const container2: HTMLElement | null = document.getElementById('root');
@@ -36,6 +36,22 @@ const store2: Store2 = {
     currentPage: 1,
     feeds: [],
 };
+
+class Api {
+  
+  url: string;
+  ajax: XMLHttpRequest;
+
+  getRequest<AjaxResponse>(url: string): AjaxResponse {
+    const ajax = new XMLHttpRequest();
+    ajax.open('GET', url, false);
+    ajax.send();
+
+    return JSON.parse(ajax.response);
+  }
+}
+
+
 
 function getData2<AjaxResponse>(url: string): AjaxResponse {
     ajax2.open('GET', url, false);
