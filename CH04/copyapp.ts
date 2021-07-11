@@ -37,7 +37,7 @@ const store2: Store2 = {
     feeds: [],
 };
 
-class Api {
+class Api2 {
   
   url: string;
   ajax: XMLHttpRequest;
@@ -51,7 +51,17 @@ class Api {
   }
 }
 
+class NewsFeedApi2 {
+  getData(): NewsFeed2[] {
+    return this.getRequest<NewsFeed2[]>();
+   }
+}
 
+class NewsDetailApi2 {
+  getData(id: string): NewsDetail2 {
+    return this.getRequest<NewsDetail2>(CONTENT_URL.replace('@id', id));
+  }
+}
 
 function getData2<AjaxResponse>(url: string): AjaxResponse {
     ajax2.open('GET', url, false);
